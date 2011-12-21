@@ -1,0 +1,233 @@
+<!doctype html>
+<html>
+<head>
+    <title>Photo Tagger</title>
+<script src="gallery/jquery.min.js"></script>
+<link media="screen" rel="stylesheet" href="gallery/colorbox.css" />
+<script src="gallery/jquery.colorbox.js"></script>
+
+<script src="background.js"></script>
+<script type="text/javascript">
+
+// set speed dial onclick url + title 
+try{   
+    if(opera.contexts.speeddial){
+        opera.contexts.speeddial.url = "index.html";
+        opera.contexts.speeddial.title = "My Tagged Photos"; 
+    }
+}catch(e){}
+
+</script>
+<style>
+    *{
+        margin: 0;
+        padding: 0;
+    }
+    html,body{
+        height: 100%;
+        width: 100%;
+        position: relative;
+    }
+    body{
+        font-family: helvetica, arial;
+        background: #333;
+        color: #FFF;
+    }
+    h1{
+		font-family:Georgia, serif;
+		padding: 1em 0 0.5em;
+		font-weight: normal;
+    }
+    a{
+    	color: #75d3ff;
+    }
+    #gallery{
+        padding: 0% 0 0 6%;
+        height: 100%;
+        position:relative;
+    }
+    .imgContainer{
+        width: 18%;
+        height: 24%;
+        float: left;
+        margin: 3% 3% 0 2%;
+        background-color: #FFF;
+        /*background-position: center;*/
+        /*background-repeat: no-repeat;*/
+        border: 3px solid #fff;
+        border-radius:2px;
+        position: relative;
+        cursor: pointer;
+        padding:0;
+    }
+    .landscape{
+    	background-size: 100% auto;
+    	background-position: left center;
+    }
+    .portrait{
+    	background-size: auto 100%;
+    	background-position: 50% 0%;
+    }
+    .active{
+        border-color: #387dc1 !important;
+    }
+    
+    .close {
+        width: 15px;
+        height: 15px;
+        position: absolute;
+        top: 1px;
+        right: 1px;
+        background-color: #c1c1c1;
+        border: 2px solid #939191;
+        position: absolute;
+        border-radius: 12px;
+        opacity: 1.0;
+        display: none;
+    }
+    .active .close{
+        display: block;
+    }
+    
+    .close img{
+        margin: 2px 0px 2px 2px;
+        width: 11px;
+        height: 11px;
+    }
+    
+    #header {
+        display:block;
+        height:10%;
+        margin: 0 8%;
+        position:relative;
+    }
+    
+    #info {
+        color: #FFF;
+        position:absolute;
+        top: 0px;
+        width: 80%;
+        height: 100%;
+        margin: 0 10%;
+        text-align: center;
+        display: none;
+	    }
+	    #info h1{
+	     	font-size: 18px;
+	     	font-weight: bold;
+	     	font-size:1.5em; 
+	    	margin-top: 10%;
+		}
+	    #info .explanation{
+	    	font-size: 12px;
+	    	margin-top: 5%;
+	    }
+	    #info .example{
+	    	margin-top: 10px;
+	    }
+	    #info .SD-text{
+	    	display:none;
+	    }
+	    
+	.padding{
+		padding-top: 10px;
+	}
+	.fullSize{
+		display: none;
+		margin: 0;
+		border-bottom: 1px solid #555;
+        position:absolute;
+        bottom:0;
+        width:100%;
+	}
+	.fullSize h1{
+		border-bottom: 1px solid #111;
+        padding: 0 0 7px 0;
+	}
+
+    /* <180px */
+    @media (max-width:180px) {
+        .imgContainer{
+            border-width: 1px;
+            width: 20%;
+            height: 26%;
+        }
+        #info>div{
+            height: 0;
+        }
+        #info h1{
+        	font-size: 18px;
+        }
+    }
+    /* 175px < 290px */
+    @media (min-width:175px) and (max-width:290px){
+        #info>div{
+            height: 35%;
+        }
+    }
+    /* <290 px */
+    @media (max-width:290px) {
+        .imgContainer{
+            width: 18%;
+            height: 24%;
+        }
+    }    
+	/* >360px */
+    @media (min-width:360px) {
+        .imgContainer{ 
+            box-shadow: 1px 5px 20px #000;
+        }
+        #info h1{
+        	font-size: 28px;
+        }
+        
+    }    
+    /* 200px < 550px */
+    @media (min-width:290px) and (max-width: 550px){
+        #info .SD-text{
+        	display:block;
+        }
+    }
+    /* <550px */
+    @media (max-width: 550px){
+	  	#info .example{
+        	display:none;
+        }
+        .imgContainer{
+        	border-width: 1px;
+        }
+        #header{
+            display: none !important;
+        }
+    }
+    /* >550px */
+    @media (min-width: 551px){
+    	.fullSize{
+    		display: block;
+    	}
+        #gallery{
+            height: 90%;
+        }
+    }
+    
+    .image{
+        width: 100%;
+        height: 100%;
+        background-repeat: no-repeat;
+    }
+</style>
+</head>
+<body>
+	<div id="header">
+		<div class="fullSize"><h1>My Tagged Photos:</h1></div>
+	</div>
+    <div id="gallery">
+    </div>
+    <div id="info" class="info">
+        <div class="status"><h1>Your Gallery is empty.</h1></div>
+        <div class="padding example">To add photos click on the star when hovering over images on the web<span class="example">, like so:</span></div>
+        <div class="SD-text padding"><a href="#none">Click to see how to add to it</a></div>
+        <div class="example"><img src="images/example4.jpg" width="655" height="486" alt="Hover your mouse over images on the web to make the Photo Tagger star appear."/>
+    </div>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget xmlns="http://www.w3.org/ns/widgets" id="https://addons.opera.com/addons/extensions/details/photo-tagger/" version="1.93" viewmodes="minimized">
+  <name>Photo Tagger</name>
+  <feature name="opera:speeddial">
+    <param name="url" value="http:www.opera.com/"/>
+  </feature>
+  <icon src="icon.64x64.png"/>
+  <access origin="*"/>
+  <preference name="width" value="70"/>
+  <preference name="height" value="70"/>
+  <preference name="cache" value=""/>
+  <update-description href="https://extension-updates.opera.com/api/w3c-wd1/update/31dcf4eb-c2b0-452b-b667-5b6b6cb9f4d6/"/>
+  <license>Copyright 2011 Opera Software. All rights reserved.</license>
+  <author href="https://addons.opera.com">Opera Software</author>
+  <description xml:lang="en">Tag images you like on the web so you don't lose them.</description>
+</widget>

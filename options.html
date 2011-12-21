@@ -1,0 +1,295 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+html
+{
+    border-top:64px solid #e9eaf0;
+    border-bottom:64px solid #dee1e9;
+    background:url(options.bg.png) top center repeat-x #dee1e9;
+    color:#234;
+}
+body
+{
+    margin:auto;
+    width:50%;
+    min-width:512px;
+    font:normal normal 12px/16px sans-serif;
+}
+a
+{
+    text-decoration:none;
+    font-weight:bold;
+    color:#234;
+    text-shadow:0 1px 0 #fff, 0 0 2px #9cf;
+}
+a:hover
+{
+    color:#234;
+}
+header
+{
+    display:block;
+    height:64px;
+    padding-left:72px;
+    background:url(icon.64x64.png) 2px 2px no-repeat;
+    margin-bottom:32px;
+    white-space:nowrap;
+}
+p
+{
+    white-space:pre-line;
+}
+h1
+{
+    margin:0;
+    font:normal normal 48px/48px sans-serif;
+    text-shadow:0 1px 0 #fff;
+}
+h2
+{
+    margin:0;
+    font:normal normal 12px/16px sans-serif;
+}
+legend
+{
+    font:normal normal 18px/24px sans-serif;
+    text-shadow:0 1px 0 #fff;
+}
+fieldset
+{
+    margin:32px 0;
+    border:none;
+    padding:16px;
+    border-radius:4px;
+    background:#e9eaf0;
+}
+label
+{
+    display:block;
+    line-height:24px;
+}
+footer
+{
+    text-align:right;
+}
+.buttons{
+	text-align: center;
+}
+.buttons input{
+    font-size: 16px;
+}
+
+.view-mode {
+    display: block;
+}
+
+@media (max-height:360px){
+    .view-mode {display: none;}
+    body {width:90%; min-width:0px;}
+    html {border: none;}
+    fieldset{margin:20px 0 0 0;}
+    header{
+        height: auto;
+        padding-left: 47px;
+        background-size: 35px 35px;
+        margin: 10px 0 20px 0;
+    }
+    h1{
+        font:normal normal 20px/20px sans-serif;
+        text-shadow:0 1px 0 #fff;
+    }
+}
+
+</style>
+<title id="widget-title">Opera Extensions | Name of Extension</title>
+</head>
+<body>
+
+    <header class="view-mode"><h1><span id="widget-name">Extension name</span> options</h1><h2>by <a href="#" id="widget-author">Developer</a></h2></header>
+
+    <p id="widget-description-summary" class="view-mode">Optional description of your extensions inner workings and options. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+
+    <div>
+        <fieldset>
+            <legend>Set the minimum size of images you can tag</legend>
+            <label><input type="number" name="width" value="70" /> width</label>
+            <label><input type="number" name="height" value="70" /> height</label>
+        </fieldset>
+        
+        <fieldset>
+            <legend>Cache settings</legend>
+            <label><input type="checkbox" name="cache" value="1"/> enable caching</label>
+            <label>Use this option to save images in the browser storage. Images will be visible even if they are gone from origin servers.<br/>You can adjust the storage quota in opera:config 'User JS Storage Quota'.<br/><span style="font-weight:bold;">Note:</span> Images won't be cached if the storage is full.</label>
+        </fieldset>
+    </div>
+
+    <p id="widget-description-all" class="view-mode">Optional description of your extensions inner workings and options. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+    
+    <div class="buttons view-mode">
+        <input type="button" onclick="window.close();" value="Done"/>
+    </div>
+
+<script>
+
+(function()
+{
+    var widget = window.widget||{};
+
+    // storage
+    var storage = widget.preferences||localStorage;
+
+    // glue for multiple values ( checkbox, select-multiple )
+    var glue    = '\n';
+
+    // get the FORM elements
+    var formElements = document.querySelectorAll( 'input,select' );
+
+    // list of
+    var skip            = hash( 'hidden submit image reset button' );
+    var multipleValues  = hash( 'checkbox select-multiple' );
+    var checkable       = hash( 'checkbox radio' );
+
+
+
+    // string to hash
+    function hash( str, glue )
+    {
+        var obj = {};
+        var tmp = str.split(glue||' ');
+
+        while( tmp.length )
+            obj[ tmp.pop() ] = true;
+
+        return obj;
+    }
+
+
+    // walk the elements and apply a callback method to them
+    function walkElements( callback )
+    {
+        var obj = [];
+        for( var i=0,element=null; element=formElements[i++]; )
+        {
+            // skip the element if it has no name or is of a type with no useful value
+            var type = element.type.toLowerCase();
+            var name = element.name||'';
+            if( skip[type]===true || name=='') continue;
+
+            var tmp = callback( element, name, type );
+            if( tmp!=null )
+                obj.push( tmp );
+        }
+        return obj;
+    }
+
+
+    // listener for element changes
+    function changedElement( e )
+    {
+        var element = e.currentTarget;
+        var type    = element.type.toLowerCase();
+        var name    = element.name||'';
+
+        var value   = multipleValues[type]!==true?element.value:walkElements
+        (
+            function( e, n, t )
+            {
+                if( n==name && e.options )
+                {
+                    var tmp = [];
+                    for( var j=0,option=null; option=e.options[j++]; )
+                    {
+                        if( option.selected )
+                        {
+                            tmp.push( option.value );
+                        }
+                    }
+                    return tmp.join( glue );
+                }
+                else if( n==name && checkable[t]===true && e.checked )
+                {
+                    return e.value;
+                }
+            }
+        ).join( glue );
+
+        if (type == 'number'){
+            value = parseInt(value);
+            if (!value) value = storage.getItem(name);
+            element.value = value;
+        }
+        // set value
+        storage.setItem( name, value );
+    }
+
+
+
+    //
+    function $( id, txt, href )
+    {
+        var e = document.getElementById(id);
+        if( e )
+        {
+            e.textContent = txt;
+            if( href||'' )
+            {
+                e.href = href||'#';
+            }
+        }
+    }
+
+
+    // text
+    $( 'widget-title', widget.name );
+    $( 'widget-name', widget.name );
+    $( 'widget-author', widget.author, widget.authorHref );
+    $( 'widget-description-summary', widget.description.replace( /\n.*/g, '' ) );
+    $( 'widget-description-all', widget.description.replace( /[^\n]*\n*/, '' ) );
+
+
+    // walk and set the elements accordingly to the storage
+    walkElements
+    (
+        function( element, name, type )
+        {
+            var value       = storage[name]!==undefined?storage.getItem( name ):element.value;
+            var valueHash   = hash( value, glue );
+
+            if( element.selectedOptions )
+            {
+                // 'select' element
+                for( var j=0,option=null; option=element.options[j++]; )
+                {
+                    option.selected = valueHash[option.value]===true;
+                }
+            }
+            else if( checkable[type]===true)
+            {
+                if (storage[name]){
+                    // 'radio' or 'checkbox'
+                    element.checked = valueHash[element.value]===true;
+                }
+                else{
+                    element.checked = false;
+                }
+            }
+            else
+            {
+                // anything other kind of element
+                element.value = value;
+            }
+
+
+            // listen to changes
+            element.addEventListener( 'change', changedElement, true );
+        }
+    )
+
+})();
+
+
+</script>
+</body>
+</html>
