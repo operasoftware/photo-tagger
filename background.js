@@ -209,6 +209,14 @@ function display(evt){
         image.style.backgroundImage = "url(\"" + (_images[i].base64 ? "data:;base64," + _images[i].base64 : _images[i]["src"]) + "\")";
         image.title = _images[i]["src"];
         
+        $(a).colorbox({
+            transition:"fade", 
+            current:"{current} / {total}", 
+            maxWidth:"95%",
+            maxHeight:"95%",
+            scalePhotos:true
+        });
+        
         a.appendChild(image);
         
         imgContainer = document.createElement('div');
@@ -244,8 +252,6 @@ function display(evt){
         debug("[DISPLAY] --- " + i + " - Image source: " + _images[i]["src"]);
         debug('[DISPLAY] img width vs height: ' + _images[i]["width"] + '/' + _images[i]["height"]);
     }
-    
-    $("a[rel='gallery_img']").colorbox({transition:"fade", current:"{current} / {total}"});
 }
 
 /*function imgOnClick(){
