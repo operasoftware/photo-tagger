@@ -1,3 +1,8 @@
+// ==UserScript==
+// @include *
+// @exclude http://acid3.acidtests.org/*
+// ==/UserScript==
+
 window.addEventListener
 (
     'DOMContentLoaded',
