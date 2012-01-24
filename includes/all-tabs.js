@@ -61,6 +61,9 @@
 
     function mouseOver(e) {
         if(e.target.tagName == "IMG") {
+            if(String(e.src).indexOf("spaceout.gif")) {
+                return;
+            }
             showImage(e.target);
         }
     }
@@ -107,6 +110,11 @@
         if(proxy) {
             proxy.addEventListener('mouseover', flickrMouseOver, false);
         }
+
+        var spaceballs = document.getElementsByClassName('spaceball');
+        for(var i=0, ball; ball = spaceballs[i]; i++) {
+            ball.addEventListener('mouseover', flickrMouseOver, false);
+        };
     }
     
     function flickrMouseOver(e) {
