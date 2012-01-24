@@ -11,7 +11,7 @@ var _storage; // localstorage
 var _images; // array of images
 var _img_separator = "#;#";
 var _meta_separator = "#|#";
-var _debug_mode = false;
+var _debug_mode = true;
 var _cache_images = false;
 var temp;
 
@@ -49,10 +49,11 @@ function _storageHandler( e, forceUpdate )
 opera.extension.onmessage = function(event){
     switch(event.data.type){
         case 'save': // called from the user JS, works only for the index.html displayed in the SD
+            var data = JSON.parse(event.data.data);
             // Post a sentence (which includes the message received) to the opera error console.
-            debug("[MESSAGE FROM JS] This is what I got from the injected script: " + event.data.data);
+            debug("[MESSAGE FROM JS] This is what I got from the injected script: " + data.src);
             // add tag to library
-            saveImage(event.data.data);
+            saveImage(data);
             // refresh gallery
             refreshTabsGalleries();
             display('save');
@@ -69,24 +70,25 @@ opera.extension.onmessage = function(event){
     }
 }
 
-function saveImage(imgTag){
-    debug("[SAVE IMG] Storing this url: " + imgTag);
-    
-    var imgArr = imgTag.split(_meta_separator);
+function saveImage(data){
+    debug("[SAVE IMG] Storing this url: " + data.src);
     
     // save it to local storage by adding to end of list
-    if(!_storage.images)
-        _storage.images = imgTag;
-    else
-        _storage.images += _img_separator + imgTag; 
+    if(!_storage.images) {
+        _storage.images = JSON.stringify([data]);
+    }
+    else {
+        var store = JSON.parse(_storage.images);
+        store.push(data);
+        _storage.images = JSON.stringify(store);
+    }
 
-    // update the live images table
-    
+    // Update the live images table
     var image = {
-        src    : imgArr[0],
-        width  : parseInt(imgArr[1]),
-        height : parseInt(imgArr[2]),
-        base64 : null,
+        src    : data.src,
+        width  : data.width,
+        height : data.height,
+        base64 : null
     }
     
     _images.push(image);
@@ -121,53 +123,29 @@ function getBase64Image(imageData, imgInd) {
 function updateStorage(){
     var imgTag;
     var imgs = _images;
-    var storage = '';
+    var store = [];
     var org_storage = _storage.images;
     
-    for (var i = 0, len = imgs.length; i < len; i ++){
-        imgTag = imgs[i].src + '#|#' + imgs[i].width + '#|#' + imgs[i].height + (imgs[i].base64 ? '#|#' + imgs[i].base64 : '');
-        if (i > 0){
-            storage += _img_separator + imgTag;
-        }
-        else {
-            storage = imgTag;
-        }
+    for (var i = 0, img; img = imgs[i]; i++){
+        store.push(img);
     }
-    //try/catch
+
     try{
-        _storage.images = storage;
+        _storage.images = JSON.stringify(store);
     }
     catch(e){
-        opera.postError("Couldn't save to the storage - storage is full");
+        opera.postError("Couldn't save to the storage - storage is full.");
         _storage.images = org_storage;
     }
 }
 
-// get all tags as an array
+// Get all tags as an array
 function getImages(){
-    // get all images as an array
-    if(!_storage.images)
-        return new Array();
-    
-    var tmpArray = _storage.images.split(_img_separator);
-    //debug("[GET IMGS] storage: " + _storage.images);
-    //debug("[GET IMGS] Images count: " + tmpArray.length);
-    
-    // parse through and make multi dimensional array
-    var imgArray = [];
-    var meta;
-    for(var i = 0, len = tmpArray.length; i < len; i++){
-        meta = tmpArray[i].split(_meta_separator);
-        imgArray.push({
-            "src" : meta[0],
-            "width" : parseInt(meta[1]),
-            "height" : parseInt(meta[2]),
-            "base64" : meta[3],
-        });
-        debug("[GET IMGS] --- " + i + " - src:" + meta[0]);
+    if(!_storage.images) {
+        return [];
     }
-
-    return imgArray;
+    
+    return JSON.parse(_storage.images);
 }
 
 // display images
@@ -261,18 +239,10 @@ function display(evt){
 
 function removeImage(){
     var imgIndex = parseInt(this.parentNode.firstChild.getAttribute('imgId'));
-    
-    _images.splice(imgIndex, 1);
-    var tmpArray = _storage.images.split(_img_separator);
-    tmpArray.splice(imgIndex, 1);
-    _storage.images = '';
-    
-    for (var i = 0; i < tmpArray.length; i ++){
-        if (i == 0)
-            _storage.images = tmpArray[i];
-        else
-            _storage.images += _img_separator + tmpArray[i]
-    }
+
+    var images = getImages();
+    images.splice(imgIndex, 1);
+    _storage.images = JSON.stringify(images);
     
     // this will refresh only SD
     opera.extension.postMessage({type:'refresh'});

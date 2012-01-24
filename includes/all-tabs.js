@@ -56,7 +56,7 @@
     }
         
     function buttonClick(){
-        tagImage(imageData);
+        opera.extension.postMessage({type: 'save', data: imageData});
     }
 
     function mouseOver(e) {
@@ -87,7 +87,7 @@
         tagButton.style.display = "block";
         showButton = true;
 
-        imageData = image.src + '#|#' + image.width + '#|#' + image.height;
+        imageData = JSON.stringify({src: image.src, width: image.width, height: image.height});
     }
     
     // Find real position of an element
@@ -97,11 +97,6 @@
         }
         var off = findPos(obj.offsetParent);
         return [obj.offsetLeft + off[0], obj.offsetTop + off[1]]; 
-    }
-    
-    function tagImage(imgMetaData) {
-        // send to background script this string: 'src,width,height'
-        opera.extension.postMessage({type: 'save', data: imgMetaData});
     }
     
     function initFlickr() {
