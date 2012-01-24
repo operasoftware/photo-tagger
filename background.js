@@ -9,11 +9,8 @@ window.onload = init;
 // global variables
 var _storage; // localstorage
 var _images; // array of images
-var _img_separator = "#;#";
-var _meta_separator = "#|#";
 var _debug_mode = true;
 var _cache_images = false;
-var temp;
 
 function debug(msg){
     if (_debug_mode) opera.postError(msg);
