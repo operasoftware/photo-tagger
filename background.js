@@ -34,9 +34,9 @@ function init(){
 addEventListener( 'storage', _storageHandler, false );
 
 // storage handler for the options page
-function _storageHandler( e, forceUpdate )
+function _storageHandler(e, forceUpdate )
 {
-    if( e===true || e.storageArea==widget.preferences)
+    if(e===true || e.storageArea == widget.preferences)
     {
         _cache_images = widget.preferences.getItem('cache');
     }
@@ -61,9 +61,6 @@ opera.extension.onmessage = function(event){
             refreshTabsGalleries();
             init();
             break;
-        case 'createTab':
-            opera.extension.tabs.create({url:event.data.imgUrl, focused:true});
-            break;
     }
 }
 
@@ -80,18 +77,10 @@ function saveImage(data){
         _storage.images = JSON.stringify(store);
     }
 
-    // Update the live images table
-    var image = {
-        src    : data.src,
-        width  : data.width,
-        height : data.height,
-        base64 : null
-    }
-    
-    _images.push(image);
+    _images.push(data);
     
     debug('[CACHE ENABLED] ' + _cache_images);
-    if (_cache_images) getBase64Image(image, _images.length - 1);
+    if (_cache_images) getBase64Image(data, _images.length - 1);
 }
 
 function getBase64Image(imageData, imgInd) {
@@ -137,7 +126,7 @@ function updateStorage(){
 }
 
 // Get all tags as an array
-function getImages(){
+function getImages() {
     if(!_storage.images) {
         return [];
     }
@@ -169,52 +158,47 @@ function display(evt){
     	document.getElementById('header').style.display = 'block';
     }
         
-    // _images is a global variable and is filled with all images in _storage on init
-    for(i = 0; i < images_count; i++){
-        // for the grid layout
-        
+    for(var i = 0, image; image = _images[i]; i++) {
+        // For the grid layout
         var a = document.createElement('a');
         a.rel = 'gallery_img';
         a.setAttribute('imgId', i);
-        a.href = (_images[i].base64 ? _images[i].base64 : _images[i]["src"]);
+        a.href = (image.base64 ? "data:;base64," + image.base64 : image.src);
         
-        image = document.createElement('div');
-        image.className = 'image';
-        _images[i]["width"] >= _images[i]["height"] ? image.className += ' landscape' : image.className += ' portrait'; //"100% auto" : "auto 100%";
-        image.style.backgroundImage = "url(\"" + (_images[i].base64 ? "data:;base64," + _images[i].base64 : _images[i]["src"]) + "\")";
-        image.title = _images[i]["src"];
+        var div = document.createElement('div');
+        div.className = 'image ';
+        div.className += image.width >= image.height ? 'landscape' : 'portrait';
+        div.style.backgroundImage = "url(\"" + (image.base64 ? "data:;base64," + image.base64 : image.src) + "\")";
+        div.title = image.src;
+
+        var date = new Date(image.time)
+        var title = "<p>Saved <time datetime=\"" + date.toISOString() + "\">" + date.toLocaleDateString() + "</time> from <a href='" + _images[i].website + "'>" + image.website + "</a>";
         
         $(a).colorbox({
             transition:"fade", 
             current:"{current} / {total}", 
             maxWidth:"95%",
             maxHeight:"95%",
-            scalePhotos:true
+            scalePhotos:true,
+            title: title
         });
         
-        a.appendChild(image);
+        a.appendChild(div);
         
-        imgContainer = document.createElement('div');
+        var imgContainer = document.createElement('div');
         imgContainer.setAttribute('class', 'imgContainer');
-        //imgContainer.setAttribute('imgId', i);
-        //imgContainer.style.backgroundImage = "url(" + _images[i]["src"] + ")";
-        //_images[i]["width"] >= _images[i]["height"] ? imgContainer.className += ' landscape' : imgContainer.className += ' portrait'; //"100% auto" : "auto 100%";
-        //imgContainer.title = _images[i]["src"];
-        //imgContainer.setAttribute('href',imgContainer.title);
-        
         imgContainer.addEventListener('mouseover', function(){
             this.className += ' active';
         }, false);
         imgContainer.addEventListener('mouseout', function(){
             this.className = this.className.replace(' active', '');
         }, false);
-        //imgContainer.addEventListener('click', imgOnClick, false);
         
         // button to remove image from the gallery
-        close = document.createElement('div');
+        var close = document.createElement('div');
         close.className = 'close';
         close.title = "Remove image from the gallery";
-        close_img = document.createElement('img');
+        var close_img = document.createElement('img');
         close_img.src = 'images/close.png';
         close.appendChild(close_img);
         close.addEventListener('click', removeImage, false);
@@ -224,15 +208,10 @@ function display(evt){
         
         gallery.appendChild(imgContainer);
         
-        debug("[DISPLAY] --- " + i + " - Image source: " + _images[i]["src"]);
-        debug('[DISPLAY] img width vs height: ' + _images[i]["width"] + '/' + _images[i]["height"]);
+        debug("[DISPLAY] --- " + i + " - Image source: " + image.src);
+        debug('[DISPLAY] img width vs height: ' + image.width + '/' + image.height);
     }
 }
-
-/*function imgOnClick(){
-    var imgUrl = _images[this.getAttribute('imgId')].src;
-    opera.extension.postMessage({type: 'createTab', imgUrl:imgUrl});
-}*/
 
 function removeImage(){
     var imgIndex = parseInt(this.parentNode.firstChild.getAttribute('imgId'));
