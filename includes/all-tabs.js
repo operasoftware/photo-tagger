@@ -13,9 +13,11 @@
     var tagButton;
     var timeout;
     var imageData;
+    var imagePosition;
     var min_w = widget.preferences.getItem('width');
     var min_h = widget.preferences.getItem('height');
     var showButton = false;
+    var suppressButton = false;
     var _debug_mode = false;
     
     function debug(msg){
@@ -44,6 +46,10 @@
         }
         document.addEventListener('mouseover', mouseOver, false);
         document.addEventListener('mouseout', mouseOut, false);
+
+        if(widget.preferences.getItem('modifier')) {
+            initModifierListener();
+        }
     }
 
     function insertStyle(css) {
@@ -61,7 +67,7 @@
 
     function mouseOver(e) {
         if(e.target.tagName == "IMG") {
-            if(String(e.src).indexOf("spaceout.gif")) {
+            if(String(e.target.src).indexOf("spaceout.gif") !== -1) {
                 return;
             }
             showImage(e.target);
@@ -84,13 +90,28 @@
             return;
         }
         
-        var pos = findPos(image);
-        tagButton.style.left = pos[0] + 'px';
-        tagButton.style.top = pos[1] + 'px';
-        tagButton.style.display = "block";
         showButton = true;
+        imagePosition = findPos(image);
+        imageData = JSON.stringify({
+            src: image.src, 
+            width: image.width, 
+            height: image.height,
+            time: new Date(),
+            website: window.location.href
+        });
 
-        imageData = JSON.stringify({src: image.src, width: image.width, height: image.height});
+        updateButton();
+    }
+
+    function updateButton() {
+        if(showButton && !suppressButton) {
+            tagButton.style.left = imagePosition[0] + 'px';
+            tagButton.style.top = imagePosition[1] + 'px';
+            tagButton.style.display = "block";
+        }
+        else {
+            tagButton.style.display = "none";
+        }
     }
     
     // Find real position of an element
@@ -115,6 +136,22 @@
         for(var i=0, ball; ball = spaceballs[i]; i++) {
             ball.addEventListener('mouseover', flickrMouseOver, false);
         };
+    }
+
+    function initModifierListener() {
+        suppressButton = true;
+        document.addEventListener('keydown', function(e) {
+            if(e.keyCode == 16) {
+                suppressButton = false;
+                updateButton();
+            }
+        }, false);
+        document.addEventListener('keyup', function(e) {
+            if(e.keyCode == 16) {
+                suppressButton = true;
+                updateButton();
+            }
+        }, false);
     }
     
     function flickrMouseOver(e) {
