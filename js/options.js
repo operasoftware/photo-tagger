@@ -106,14 +106,6 @@
     }
 
 
-    // text
-    $( 'widget-title', widget.name );
-    $( 'widget-name', widget.name );
-    $( 'widget-author', widget.author, widget.authorHref );
-    $( 'widget-description-summary', widget.description.replace( /\n.*/g, '' ) );
-    $( 'widget-description-all', widget.description.replace( /[^\n]*\n*/, '' ) );
-
-
     // walk and set the elements accordingly to the storage
     walkElements
     (

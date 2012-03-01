@@ -1,135 +1,41 @@
 <!doctype html>
 <html>
 <head>
-<meta charset="utf-8">
-<style>
-html
-{
-    border-top:64px solid #e9eaf0;
-    border-bottom:64px solid #dee1e9;
-    background:url(options.bg.png) top center repeat-x #dee1e9;
-    color:#234;
-}
-body
-{
-    margin:auto;
-    width:50%;
-    min-width:512px;
-    font:normal normal 12px/16px sans-serif;
-}
-a
-{
-    text-decoration:none;
-    font-weight:bold;
-    color:#234;
-    text-shadow:0 1px 0 #fff, 0 0 2px #9cf;
-}
-a:hover
-{
-    color:#234;
-}
-header
-{
-    display:block;
-    height:64px;
-    padding-left:72px;
-    background:url(icon.64x64.png) 2px 2px no-repeat;
-    margin-bottom:32px;
-    white-space:nowrap;
-}
-p
-{
-    white-space:pre-line;
-}
-h1
-{
-    margin:0;
-    font:normal normal 48px/48px sans-serif;
-    text-shadow:0 1px 0 #fff;
-}
-h2
-{
-    margin:0;
-    font:normal normal 12px/16px sans-serif;
-}
-legend
-{
-    font:normal normal 18px/24px sans-serif;
-    text-shadow:0 1px 0 #fff;
-}
-fieldset
-{
-    margin:32px 0;
-    border:none;
-    padding:16px;
-    border-radius:4px;
-    background:#e9eaf0;
-}
-label
-{
-    display:block;
-    line-height:24px;
-}
-footer
-{
-    text-align:right;
-}
-.buttons{
-	text-align: center;
-}
-.buttons input{
-    font-size: 16px;
-}
-
-.view-mode {
-    display: block;
-}
-
-@media (max-height:360px){
-    .view-mode {display: none;}
-    body {width:90%; min-width:0px;}
-    html {border: none;}
-    fieldset{margin:20px 0 0 0;}
-    header{
-        height: auto;
-        padding-left: 47px;
-        background-size: 35px 35px;
-        margin: 10px 0 20px 0;
-    }
-    h1{
-        font:normal normal 20px/20px sans-serif;
-        text-shadow:0 1px 0 #fff;
-    }
-}
-
-</style>
-<script src="js/options.js"></script>
-<title id="widget-title">Opera Extensions | Name of Extension</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="style/options.css" type="text/css"/>
 </head>
 <body>
-
-    <header class="view-mode"><h1><span id="widget-name">Extension name</span> options</h1><h2>by <a href="#" id="widget-author">Developer</a></h2></header>
-
-    <p id="widget-description-summary" class="view-mode">Optional description of your extensions inner workings and options. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-
     <div>
-        <fieldset>
-            <legend>Set the minimum size of images you can tag</legend>
-            <label><input type="number" name="width" value="70" /> width</label>
-            <label><input type="number" name="height" value="70" /> height</label>
-        </fieldset>
-        
-        <fieldset>
-            <legend>Cache settings</legend>
-            <label><input type="checkbox" name="cache" value="1"/> enable caching</label>
-            <label>Use this option to save images in the browser storage. Images will be visible even if they are gone from origin servers.<br/>You can adjust the storage quota in opera:config 'User JS Storage Quota'.<br/><span style="font-weight:bold;">Note:</span> Images won't be cached if the storage is full.</label>
-        </fieldset>
-    </div>
+            <fieldset>
+                <legend>Image tagging</legend>
+                <div>
+                    <span>Minimum image size:</span>
+                    <label><input type="number" name="width" value="70" /> width</label>
+                    <label><input type="number" name="height" value="70" /> height</label>
+                </div>
 
-    <p id="widget-description-all" class="view-mode">Optional description of your extensions inner workings and options. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-    
-    <div class="buttons view-mode">
-        <input type="button" onclick="window.close();" value="Done"/>
+                <div>
+                    <input type="checkbox" value="1" name="modifier" id="modifier"/>
+                    <label for="modifier">Enable shift-key modifier</label>
+                    <p>Enable to only show the tag button when the shift key is pressed.</p>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Storage</legend>
+                <div>
+                    <input type="checkbox" value="1" name="cache" id="cache"/>
+                    <label for="cache">Enable caching</label>
+                    <p>Use this option to save images in the browser storage. Images will be visible even if they are gone from origin servers.<br/>You can adjust the storage quota in opera:config 'User JS Storage Quota'.</p>
+                    <p><strong>Note:</strong> Images won't be cached if the storage is full.</p>
+                </div>
+
+                <div>
+                    <button type=button>Import</button>
+                    <button type=button>Export</button>
+                </div>
+        </fieldset>
     </div>
+    <script src="js/options.js"></script>
 </body>
 </html>
