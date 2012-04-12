@@ -155,10 +155,13 @@
     }
     
     function flickrMouseOver(e) {
-        var image = e.target.parentNode.parentNode.querySelector('img');
-        if(image) {
-            showImage(image);
+        var images = e.target.parentNode.parentNode.querySelectorAll('img');
+        for(var i=0, image; image = images[i]; i++) {
+            if(String(image.src).indexOf('staticflickr') != -1) {
+                return showImage(image);
+            }
         }
+        return;
     }
     
     document.addEventListener('DOMContentLoaded', init, false);
