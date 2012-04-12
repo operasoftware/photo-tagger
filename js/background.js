@@ -3,89 +3,133 @@
 // and display the image in speed dial
 //
 
-// run the init script when page loads
-window.onload = init; 
+(function()
+{
+    var db;
 
-// global variables
-var _storage; // localstorage
-var _images; // array of images
+    function prepareDatabase(success, error) {
+        var db = openDatabase('photo-tagger', '', 'Photo tagger storage', 5*1024*1024)
+        db.transaction(function(tx) {
+            tx.executeSql('CREATE TABLE IF NOT EXISTS images (' + 
+                       'id INTEGER PRIMARY KEY, ' +
+                       'src TEXT, ' +
+                       'width INTEGER, ' +
+                       'height INTEGER,' +
+                       'time DATETIME,' +
+                       'website TEXT,' +
+                       'category INTEGER,' +
+                       'data BLOB)',
+                [], success, error
+            );
+            tx.executeSql('CREATE TABLE IF NOT EXISTS categories (' +
+                        'id INTEGER PRIMARY KEY, ' +
+                        'name TEXT',
+                [], success, error
+            );
+
+        });
+        return db;
+    }
+
+    function insertImage(src, width, height, website) {
+        db.transaction(function(tx){
+            var currentTime = new Date();
+            tx.executeSql('INSERT INTO images (src, width, height, time, website) VALUES (?,?,?,?,?)', 
+                  [src, width, height, currentTime, website], function(){opera.postError("insert success")}, function() { opera.postError("insert fail")});
+        });
+    }
+
+    function insertCache(data, src) {
+        db.transaction(function(tx){
+            tx.executeSql('UPDATE images SET data=? WHERE src=?', 
+                  [data, src]
+            );
+        });
+    }
+
+    function removeImage(id) {
+        db.transaction(function(tx) {
+            tx.executeSql("DELETE FROM images WHERE id=?", [id]);
+        });
+    }
+
+    function getImages(success) {
+        db.transaction(function(tx) {
+            tx.executeSql('SELECT * FROM images', [], function(tx, results) {
+                var images = [];
+                for(var i=0, row; row =  results.rows[i]; i++) {
+                    images.push({
+                        id: row.id,
+                        width: row.width,
+                        height: row.height,
+                        src: row.src,
+                        time: row.time,
+                        website: row.website,
+                        data: row.data
+                    });
+                }
+                success(images);
+            });
+        });
+    }
+    
+    db = prepareDatabase(function() {
+        opera.postError("DB init success");
+    }, function() {
+        opera.postError("DB init fail");
+    });
+
+    window.DB = {
+        insertImage: insertImage,
+        insertCache: insertCache,
+        getImages: getImages,
+        removeImage: removeImage
+    };
+}
+())
+
 var _debug_mode = true;
-var _cache_images = false;
 
 function debug(msg){
     if (_debug_mode) opera.postError(msg);
 }
 
 // this script is initialized when the page loads
-function init(){
-    // storage
-    _storage = localStorage;
-    
-    // get all existing images
-    _images = getImages();
-    
-    _cache_images = widget.preferences.getItem('cache');
-    
-    // display them
-    display('init');
+function init() {
+    DB.getImages(display);
 }
 
-// storage handler for the options page
-addEventListener( 'storage', _storageHandler, false );
-
-// storage handler for the options page
-function _storageHandler(e, forceUpdate )
-{
-    if(e===true || e.storageArea == widget.preferences)
-    {
-        _cache_images = widget.preferences.getItem('cache');
-    }
-}
+document.addEventListener('DOMContentLoaded', init, false);
 
 // Listen for injected script messages (i.e. for image tags)
 opera.extension.onmessage = function(event){
-    switch(event.data.type){
-        case 'save': // called from the user JS, works only for the index.html displayed in the SD
-            var data = JSON.parse(event.data.data);
-            // Post a sentence (which includes the message received) to the opera error console.
-            debug("[MESSAGE FROM JS] This is what I got from the injected script: " + data.src);
-            // add tag to library
-            saveImage(data);
-            // refresh gallery
-            refreshTabsGalleries();
-            display('save');
-            break;
-        case 'refresh':
-            debug("{REFRESHING GALLERY TABS]");
-            // SD forces to refresh all opened galleries tabs
-            refreshTabsGalleries();
-            init();
-            break;
+    if(event.data.type == 'save') {
+        var data = JSON.parse(event.data.data);
+        debug("[MESSAGE FROM JS] This is what I got from the injected script: " + data.src);
+
+        saveImage(data);
+        refreshTabsGalleries();
+        DB.getImages(display);
+    }
+    else if(event.data.type == 'refresh') {
+        debug("{REFRESHING GALLERY TABS]");
+        refreshTabsGalleries();
+        init();
     }
 }
 
 function saveImage(data){
     debug("[SAVE IMG] Storing this url: " + data.src);
-    
-    // save it to local storage by adding to end of list
-    if(!_storage.images) {
-        _storage.images = JSON.stringify([data]);
-    }
-    else {
-        var store = JSON.parse(_storage.images);
-        store.push(data);
-        _storage.images = JSON.stringify(store);
-    }
 
-    _images.push(data);
+    DB.insertImage(data.src, data.width, data.height, data.website);
     
-    debug('[CACHE ENABLED] ' + _cache_images);
-    if (_cache_images) getBase64Image(data, _images.length - 1);
+    debug('[CACHE ENABLED] ' + widget.preferences.cache);
+    if (widget.preferences.cache) getBase64Image(data.src);
 }
 
-function getBase64Image(imageData, imgInd) {
+function getBase64Image(src) {
     var image = document.createElement('img');
-    image.src = imageData.src;
+    image.src = src;
     
     image.onload = function(){
         debug("[IMAGE LOADED]");
@@ -100,89 +144,68 @@ function getBase64Image(imageData, imgInd) {
         ctx.drawImage(this, 0, 0);
         var dataURL = canvas.toDataURL();
         
-        _images[imgInd].base64 = dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
+        DB.insertCache(dataURL.replace(/^data:image\/(png|jpg);base64,/, ""), src);
+    }
+}
+
+(function()
+{
+    function init() {
+    }
+
+    function paint() {
+        var gallery = document.getElementById('gallery');
+         
+        // clear gallery
+        gallery.innerHTML = '';
+
+        if(images.length == 0) { 
+            document.getElementById('info').style.display = 'block';
+            document.getElementById('header').style.display = 'none';
+        }
+        else {
+            document.getElementById('info').style.display = 'none';
+            document.getElementById('header').style.display = 'block';
+        }
         
-        updateStorage();
-    }
 }
 
-function updateStorage(){
-    var imgTag;
-    var imgs = _images;
-    var store = [];
-    var org_storage = _storage.images;
-    
-    for (var i = 0, img; img = imgs[i]; i++){
-        store.push(img);
-    }
-
-    try{
-        _storage.images = JSON.stringify(store);
-    }
-    catch(e){
-        opera.postError("Couldn't save to the storage - storage is full.");
-        _storage.images = org_storage;
-    }
-}
-
-// Get all tags as an array
-function getImages() {
-    if(!_storage.images) {
-        return [];
-    }
-    
-    return JSON.parse(_storage.images);
-}
+    window.Display = {
+        init: init
+    };
+})();
 
 // display images
-function display(evt){
-    debug('[DISPLAY IMAGES BY] ' + evt);
-    var gallery = document.getElementById('gallery');
-    var images_count = _images.length;
+function display(images){
     var image;
     var imgContainer;
     var close;
     var close_img;
-    
-    // clear gallery
-    gallery.innerHTML = '';
-
-    debug("[DISPLAY] images array: " + JSON.stringify(_images, null, '\t'));
-    
-    if (images_count == 0){ 
-    	document.getElementById('info').style.display = 'block';
-    	document.getElementById('header').style.display = 'none';
-    }
-    else{
-    	document.getElementById('info').style.display = 'none';
-    	document.getElementById('header').style.display = 'block';
-    }
-        
-    for(var i = 0, image; image = _images[i]; i++) {
+       for(var i = 0, image; image = images[i]; i++) {
         // For the grid layout
         var a = document.createElement('a');
         a.rel = 'gallery_img';
-        a.setAttribute('imgId', i);
-        a.href = (image.base64 ? "data:;base64," + image.base64 : image.src);
+        a.setAttribute('image_id', image.id);
+        a.href = (image.data ? image.data : image.src);
         
         var div = document.createElement('div');
         div.className = 'image ';
         div.className += image.width >= image.height ? 'landscape' : 'portrait';
-        div.style.backgroundImage = "url(\"" + (image.base64 ? "data:;base64," + image.base64 : image.src) + "\")";
+        div.style.backgroundImage = "url(\"" + (image.data ? "data:;base64," + image.data : image.src) + "\")";
         div.title = image.src;
 
         var date = new Date(image.time)
-        var title = "<p>Saved <time datetime=\"" + date.toISOString() + "\">" + date.toLocaleDateString() + "</time> from <a href='" + _images[i].website + "'>" + image.website + "</a>";
-        
+        var title = "<p>Saved <time datetime=\"" + date.toISOString() + "\">" + date.toLocaleDateString() + "</time> from <a href='" + image.website + "'>" + image.website + "</a>";
+ 
         $(a).colorbox({
-            transition:"fade", 
-            current:"{current} / {total}", 
-            maxWidth:"95%",
-            maxHeight:"95%",
-            scalePhotos:true,
-            title: title
+               transition:"fade", 
+               current:"{current} / {total}", 
+               maxWidth:"95%",
+               maxHeight:"95%",
+               scalePhotos:true,
+               title: title 
         });
-        
+       
         a.appendChild(div);
         
         var imgContainer = document.createElement('div');
@@ -214,11 +237,9 @@ function display(evt){
 }
 
 function removeImage(){
-    var imgIndex = parseInt(this.parentNode.firstChild.getAttribute('imgId'));
+    var id = parseInt(this.parentNode.firstChild.getAttribute('image_id'));
 
-    var images = getImages();
-    images.splice(imgIndex, 1);
-    _storage.images = JSON.stringify(images);
+    DB.removeImage(id);
     
     // this will refresh only SD
     opera.extension.postMessage({type:'refresh'});
